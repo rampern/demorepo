@@ -21,18 +21,17 @@ It also supports user authentication with JWT tokens, refresh token rotation, an
 ### Local Deployment
 
 1. Ensure you have Python 3.9+ installed.
-2. Install dependencies:
+2. Ensure you have PostgreSQL installed and running locally.
+3. Run the setup script to install dependencies and check prerequisites:
 
 ```bash
-pip install fastapi uvicorn httpx sqlalchemy psycopg2-binary bcrypt PyJWT
+./setup_prerequisites.sh
 ```
 
-3. Ensure you have PostgreSQL running locally or update `DATABASE_URL` environment variable accordingly.
-
-4. Run the backend:
+4. Start the backend server:
 
 ```bash
-uvicorn backend.app.main:app --reload
+./start_backend.sh
 ```
 
 5. The API will be available at `http://localhost:8000`.
