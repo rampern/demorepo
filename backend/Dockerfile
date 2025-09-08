@@ -4,6 +4,6 @@ WORKDIR /app
 
 COPY ./backend /app
 
-RUN pip install --no-cache-dir fastapi uvicorn httpx
+RUN pip install --no-cache-dir fastapi uvicorn httpx sqlalchemy psycopg2-binary bcrypt PyJWT
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,12 +1,16 @@
 # demorepo
 
-## GitHub Integration Backend
+## GitHub Integration Backend with Authentication
 
 This backend provides API endpoints to interact with GitHub repositories using personal access tokens.
+It also supports user authentication with JWT tokens, refresh token rotation, and secure cookie storage.
 
 ### Features
 
-- Store GitHub username, repository name, and personal access token.
+- User signup and login with email and password (hashed using bcrypt).
+- JWT authentication with access and refresh tokens.
+- Refresh token rotation and secure HttpOnly cookies.
+- Store GitHub username, repository name, GitHub personal access token, and OpenAI API token per user.
 - Fetch repository contents recursively using GitHub tree API.
 - Get file content decoded from base64.
 - Commit changes flow implemented (create blobs -> tree -> commit -> update ref).
@@ -20,22 +24,30 @@ This backend provides API endpoints to interact with GitHub repositories using p
 2. Install dependencies:
 
 ```bash
-pip install fastapi uvicorn httpx
+pip install fastapi uvicorn httpx sqlalchemy psycopg2-binary bcrypt PyJWT
 ```
 
-3. Run the backend:
+3. Ensure you have PostgreSQL running locally or update `DATABASE_URL` environment variable accordingly.
+
+4. Run the backend:
 
 ```bash
 uvicorn backend.app.main:app --reload
 ```
 
-4. The API will be available at `http://localhost:8000`.
+5. The API will be available at `http://localhost:8000`.
 
 ### API Endpoints
 
-- `POST /github/tree` - Get recursive tree of repo files.
-- `POST /github/file` - Get file content.
-- `POST /github/commit` - Commit changes.
+- `POST /signup` - Register a new user.
+- `POST /login` - Login and receive access and refresh tokens in secure cookies.
+- `POST /logout` - Logout and clear tokens.
+- `POST /refresh` - Refresh access token using refresh token cookie.
+- `GET /user/github-config` - Get stored GitHub and OpenAI tokens.
+- `POST /user/github-config` - Update GitHub and OpenAI tokens.
+- `POST /github/tree` - Get recursive tree of repo files (requires auth).
+- `POST /github/file` - Get file content (requires auth).
+- `POST /github/commit` - Commit changes (requires auth).
 
 ### Docker Compose
 
