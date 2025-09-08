@@ -28,13 +28,19 @@ It also supports user authentication with JWT tokens, refresh token rotation, an
 ./setup_prerequisites.sh
 ```
 
-4. Start the backend server:
+4. Initialize the database schema:
+
+```bash
+./init_db.sh
+```
+
+5. Start the backend server:
 
 ```bash
 ./start_backend.sh
 ```
 
-5. The API will be available at `http://localhost:8000`.
+6. The API will be available at `http://localhost:8000`.
 
 ### API Endpoints
 
