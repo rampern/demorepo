@@ -56,6 +56,6 @@ fi
 # Install Python dependencies
 echo "Installing Python dependencies..."
 pip3 install --upgrade pip
-pip3 install fastapi uvicorn httpx sqlalchemy psycopg2-binary bcrypt PyJWT
+pip3 install fastapi uvicorn httpx sqlalchemy psycopg2-binary bcrypt PyJWT python-multipart
 
 echo "Setup complete. You can now run the application using ./start_backend.sh"

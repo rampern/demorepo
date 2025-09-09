@@ -42,6 +42,8 @@ It also supports user authentication with JWT tokens, refresh token rotation, an
 
 6. The API will be available at `http://localhost:8000`.
 
+**Note:** The backend requires the `python-multipart` package to handle form data. This is installed automatically by the setup script and included in the Docker image.
+
 ### API Endpoints
 
 - `POST /signup` - Register a new user.
