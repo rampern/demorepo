@@ -48,7 +48,7 @@ Additionally, it supports storing per-user OpenAI API keys encrypted and an "Ask
 
 ```bash
 cd frontend
-npm install
+npm install --legacy-peer-deps
 npm run dev
 ```
 
@@ -89,7 +89,7 @@ The backend will be available on port 8000.
 
 The frontend is built with React, Vite, Tailwind CSS, and Axios.
 
-Run `npm install` and `npm run dev` in the `frontend` directory to start the UI locally.
+Run `npm install --legacy-peer-deps` and `npm run dev` in the `frontend` directory to start the UI locally.
 
 ### Docker Compose for External/Cloud Deployment
 
