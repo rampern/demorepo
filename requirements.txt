@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+httpx
+sqlalchemy
+psycopg2-binary
+bcrypt
+PyJWT
+python-multipart
+pillow

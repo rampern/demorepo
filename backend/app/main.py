@@ -1,6 +1,6 @@
 import base64
 import httpx
-from fastapi import FastAPI, HTTPException, Depends, Response, Request, Cookie
+from fastapi import FastAPI, HTTPException, Depends, Response, Request, Cookie, UploadFile, File
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr, constr
 from typing import List, Optional
@@ -10,6 +10,9 @@ import bcrypt
 import jwt
 import secrets
 import os
+import io
+from PIL import Image
+import json
 
 from backend.app.database import SessionLocal, engine, Base
 from backend.app import models
@@ -23,6 +26,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 15
 REFRESH_TOKEN_EXPIRE_DAYS = 7
 
 GITHUB_API_URL = "https://api.github.com"
+OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
 
 # Dependency
 
@@ -71,6 +75,17 @@ class CommitRequest(BaseModel):
     message: str
     branch: Optional[str] = None
     files: List[FileContent]
+
+class AskRequest(BaseModel):
+    prompt: str
+
+class DiffItem(BaseModel):
+    path: str
+    old: Optional[str]
+    new: Optional[str]
+
+class AskResponse(BaseModel):
+    diffs: List[DiffItem]
 
 # Utility functions
 
@@ -380,6 +395,137 @@ async def commit_changes(commit_req: CommitRequest, current_user: models.User = 
             if create_resp.status_code != 201:
                 raise HTTPException(status_code=create_resp.status_code, detail="Failed to create ref")
         return {"commit_sha": commit_sha}
+
+# Helper to fetch repo files and contents
+async def fetch_repo_files_contents(config: GitHubConfig):
+    headers = {"Authorization": f"token {config.token}"}
+    default_branch = await get_default_branch(config)
+    tree_url = f"{GITHUB_API_URL}/repos/{config.username}/{config.repo}/git/trees/{default_branch}?recursive=1"
+    async with httpx.AsyncClient() as client:
+        tree_resp = await client.get(tree_url, headers=headers)
+        if tree_resp.status_code != 200:
+            raise HTTPException(status_code=tree_resp.status_code, detail="Failed to fetch repo tree")
+        tree_data = tree_resp.json()
+        tree = tree_data.get("tree", [])
+        files = [item["path"] for item in tree if item["type"] == "blob"]
+
+        file_contents = {}
+        for path in files:
+            file_url = f"{GITHUB_API_URL}/repos/{config.username}/{config.repo}/contents/{path}"
+            file_resp = await client.get(file_url, headers=headers)
+            if file_resp.status_code != 200:
+                continue
+            file_data = file_resp.json()
+            content_b64 = file_data.get("content", "")
+            encoding = file_data.get("encoding", "")
+            if encoding != "base64":
+                continue
+            try:
+                content = base64.b64decode(content_b64).decode("utf-8")
+            except Exception:
+                content = ""
+            file_contents[path] = content
+        return file_contents
+
+# Helper to convert uploaded images to low-res base64 strings
+async def process_uploaded_files(files: List[UploadFile]) -> List[str]:
+    processed_files = []
+    for file in files:
+        try:
+            contents = await file.read()
+            image = Image.open(io.BytesIO(contents))
+            # Convert to RGB if needed
+            if image.mode != 'RGB':
+                image = image.convert('RGB')
+            # Resize to max width or height 300px preserving aspect ratio
+            max_size = (300, 300)
+            image.thumbnail(max_size, Image.ANTIALIAS)
+            # Save to bytes buffer with quality to keep size < 50KB
+            buffer = io.BytesIO()
+            quality = 85
+            while True:
+                buffer.seek(0)
+                buffer.truncate(0)
+                image.save(buffer, format='JPEG', quality=quality)
+                size = buffer.tell()
+                if size <= 50 * 1024 or quality <= 20:
+                    break
+                quality -= 5
+            encoded = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            processed_files.append(encoded)
+        except Exception:
+            # Skip non-image or error files
+            continue
+    return processed_files
+
+@app.post("/ask", response_model=AskResponse)
+async def ask_anything(
+    ask_req: AskRequest,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    uploaded_files: Optional[List[UploadFile]] = File(None)
+):
+    if not current_user.github_username or not current_user.github_repo or not current_user.github_token or not current_user.openai_token:
+        raise HTTPException(status_code=400, detail="GitHub or OpenAI configuration incomplete")
+
+    config = GitHubConfig(username=current_user.github_username, repo=current_user.github_repo, token=current_user.github_token)
+
+    # Fetch repo files and contents
+    repo_files = await fetch_repo_files_contents(config)
+
+    # Process uploaded files if any
+    encoded_files = []
+    if uploaded_files:
+        encoded_files = await process_uploaded_files(uploaded_files)
+
+    # Prepare prompt for OpenAI
+    prompt_parts = ["You are a helpful assistant. Here are the repository files and their contents:"]
+    for path, content in repo_files.items():
+        prompt_parts.append(f"File: {path}\nContent:\n{content}\n---")
+
+    if encoded_files:
+        prompt_parts.append("Here are some uploaded files encoded in base64 (JPEG, low-res):")
+        for idx, ef in enumerate(encoded_files):
+            prompt_parts.append(f"File {idx+1}: {ef}")
+
+    prompt_parts.append(f"User prompt: {ask_req.prompt}")
+    full_prompt = "\n".join(prompt_parts)
+
+    # Call OpenAI API
+    headers = {
+        "Authorization": f"Bearer {current_user.openai_token}",
+        "Content-Type": "application/json"
+    }
+
+    # We use chat completion with system and user messages
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant that returns JSON diffs of code changes."},
+        {"role": "user", "content": full_prompt}
+    ]
+
+    payload = {
+        "model": "gpt-4",
+        "messages": messages,
+        "temperature": 0
+    }
+
+    async with httpx.AsyncClient(timeout=60) as client:
+        resp = await client.post(OPENAI_API_URL, headers=headers, json=payload)
+        if resp.status_code != 200:
+            raise HTTPException(status_code=resp.status_code, detail="OpenAI API request failed")
+        data = resp.json()
+
+    # Extract content
+    try:
+        content = data["choices"][0]["message"]["content"]
+        # Expecting JSON array of diffs [{path, old, new}]
+        diffs_json = json.loads(content)
+        diffs = [DiffItem(**item) for item in diffs_json]
+    except Exception:
+        # If parsing fails, return empty list
+        diffs = []
+
+    return AskResponse(diffs=diffs)
 
 @app.get("/health")
 async def health_check():

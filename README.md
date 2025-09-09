@@ -1,9 +1,10 @@
 # demorepo
 
-## GitHub Integration Backend with Authentication
+## GitHub Integration Backend with Authentication and OpenAI Integration
 
 This backend provides API endpoints to interact with GitHub repositories using personal access tokens.
 It also supports user authentication with JWT tokens, refresh token rotation, and secure cookie storage.
+Additionally, it supports storing per-user OpenAI API keys encrypted and an "Ask Anything" flow that fetches repo files, sends prompts and attachments to OpenAI, and returns JSON diffs.
 
 ### Features
 
@@ -17,6 +18,7 @@ It also supports user authentication with JWT tokens, refresh token rotation, an
 - Works even if the repository is empty (creates first commit and branch ref).
 - Default branch detection with fallback from `main` to `master`.
 - Graceful handling of empty repositories when listing files.
+- "Ask Anything" API that sends repo files, user prompt, and optional uploaded files (converted to low-res base64 images) to OpenAI API and returns JSON diffs.
 
 ### Local Deployment
 
@@ -55,6 +57,7 @@ It also supports user authentication with JWT tokens, refresh token rotation, an
 - `POST /github/tree` - Get recursive tree of repo files (requires auth).
 - `POST /github/file` - Get file content (requires auth).
 - `POST /github/commit` - Commit changes (requires auth).
+- `POST /ask` - Ask Anything flow: send repo files, prompt, and optional uploaded files to OpenAI, get JSON diffs.
 
 ### Docker Compose
 
