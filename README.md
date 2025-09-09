@@ -56,7 +56,8 @@ Open your browser at `http://localhost:5173` (default Vite port).
 
 **Important:**
 
-- The frontend development server proxies API requests to `http://127.0.0.1:8000`.
+- The frontend development server proxies API requests to `http://127.0.0.1:8000` via `/api` prefix.
+- The frontend expects backend API calls to be prefixed with `/api` (e.g., `/api/login`).
 - Ensure the backend is running and accessible at `127.0.0.1` (not `localhost` or `::1`) to avoid connection refused errors.
 
 ### API Endpoints

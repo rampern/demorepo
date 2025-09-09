@@ -6,6 +6,9 @@ import HomePage from "./pages/HomePage";
 import AskAnythingPage from "./pages/AskAnythingPage";
 import axios from "axios";
 
+// Set axios baseURL to /api to match proxy
+axios.defaults.baseURL = "/api";
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
 
