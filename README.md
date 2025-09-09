@@ -44,6 +44,16 @@ Additionally, it supports storing per-user OpenAI API keys encrypted and an "Ask
 
 6. The API will be available at `http://localhost:8000`.
 
+7. To start the frontend UI locally:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open your browser at `http://localhost:5173` (default Vite port).
+
 **Note:** The backend requires the `python-multipart` package to handle form data. This is installed automatically by the setup script and included in the Docker image.
 
 ### API Endpoints
@@ -68,3 +78,25 @@ docker-compose up --build
 ```
 
 The backend will be available on port 8000.
+
+### Shell Scripts
+
+- `setup_prerequisites.sh`: Installs Python dependencies and checks local environment.
+- `init_db.sh`: Initializes the database schema.
+- `start_backend.sh`: Starts the backend server locally.
+
+### Frontend
+
+The frontend is built with React, Vite, Tailwind CSS, and Axios.
+
+Run `npm install` and `npm run dev` in the `frontend` directory to start the UI locally.
+
+### Docker Compose for External/Cloud Deployment
+
+The `docker-compose.yml` includes services for backend, PostgreSQL, and Redis.
+
+Run `docker-compose up --build` to start all services.
+
+The backend will be accessible on port 8000.
+
+You can configure environment variables in the `docker-compose.yml` as needed.
