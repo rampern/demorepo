@@ -42,7 +42,7 @@ Additionally, it supports storing per-user OpenAI API keys encrypted and an "Ask
 ./start_backend.sh
 ```
 
-6. The API will be available at `http://localhost:8000`.
+6. The API will be available at `http://127.0.0.1:8000`.
 
 7. To start the frontend UI locally:
 
@@ -53,6 +53,11 @@ Additionally, it supports storing per-user OpenAI API keys encrypted and an "Ask
 Open your browser at `http://localhost:5173` (default Vite port).
 
 **Note:** The backend requires the `python-multipart` package to handle form data. This is installed automatically by the setup script and included in the Docker image.
+
+**Important:**
+
+- The frontend development server proxies API requests to `http://127.0.0.1:8000`.
+- Ensure the backend is running and accessible at `127.0.0.1` (not `localhost` or `::1`) to avoid connection refused errors.
 
 ### API Endpoints
 

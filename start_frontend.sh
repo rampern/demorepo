@@ -13,4 +13,5 @@ then
 fi
 
 npm install --legacy-peer-deps
+# Use 127.0.0.1 to avoid proxy ECONNREFUSED errors
 npm run dev
