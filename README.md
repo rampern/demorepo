@@ -47,9 +47,7 @@ Additionally, it supports storing per-user OpenAI API keys encrypted and an "Ask
 7. To start the frontend UI locally:
 
 ```bash
-cd frontend
-npm install --legacy-peer-deps
-npm run dev
+./start_frontend.sh
 ```
 
 Open your browser at `http://localhost:5173` (default Vite port).
@@ -84,12 +82,13 @@ The backend will be available on port 8000.
 - `setup_prerequisites.sh`: Installs Python dependencies and checks local environment.
 - `init_db.sh`: Initializes the database schema.
 - `start_backend.sh`: Starts the backend server locally.
+- `start_frontend.sh`: Starts the frontend development server locally.
 
 ### Frontend
 
 The frontend is built with React, Vite, Tailwind CSS, and Axios.
 
-Run `npm install --legacy-peer-deps` and `npm run dev` in the `frontend` directory to start the UI locally.
+Run `./start_frontend.sh` to install dependencies and start the UI locally.
 
 ### Docker Compose for External/Cloud Deployment
 
