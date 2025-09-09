@@ -102,6 +102,9 @@ export default function HomePage() {
           Save Configuration
         </button>
       </form>
+      <div className="mt-6 text-center text-gray-600">
+        <p>Welcome to the app! Use the navigation links above to explore features.</p>
+      </div>
     </div>
   );
 }
